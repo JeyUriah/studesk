@@ -1,7 +1,7 @@
 <!-- users/teacher/index.php -->
 <?php
 session_start();
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: ../auth/login.php');
     exit();
 }

@@ -3,13 +3,25 @@
 session_start();
 require_once '../../../config/database.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: ../../auth/login.php');
     exit();
 }
 
-$sql = "SELECT * FROM notices";
+// Pagination settings
+$limit = 10; // Number of entries per page
+$page = isset($_GET['page']) ? $_GET['page'] : 1;
+$start = ($page - 1) * $limit;
+
+// Fetch notices from the database
+$sql = "SELECT * FROM notices LIMIT $start, $limit";
 $result = $conn->query($sql);
+
+// Fetch the total number of notices for pagination
+$total_sql = "SELECT COUNT(*) FROM notices";
+$total_result = $conn->query($total_sql);
+$total_notices = $total_result->fetch_row()[0];
+$total_pages = ceil($total_notices / $limit);
 ?>
 
 <!DOCTYPE html>
@@ -54,6 +66,33 @@ $result = $conn->query($sql);
                         <?php endwhile; ?>
                     </tbody>
                 </table>
+
+                <!-- Pagination links -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="view_notices.php?page=<?php echo $page - 1; ?>" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                            <li class="page-item <?php if ($i == $page) echo 'active'; ?>">
+                                <a class="page-link" href="view_notices.php?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $total_pages): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="view_notices.php?page=<?php echo $page + 1; ?>" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>

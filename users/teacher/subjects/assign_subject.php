@@ -1,4 +1,4 @@
-<!-- users/teacher/reports/add_report.php -->
+<!-- users/teacher/subjects/assign_subject.php -->
 <?php
 session_start();
 require_once '../../../config/database.php';
@@ -11,21 +11,23 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_id = $_POST['student_id'];
     $subject_id = $_POST['subject_id'];
-    $exam_score = $_POST['exam_score'];
-    $class_score = $_POST['class_score'];
-    $total_score = $exam_score * 0.7 + $class_score * 0.3;
-    $remarks = $_POST['remarks'];
 
-    $sql = "INSERT INTO reports (student_id, subject_id, exam_score, class_score, total_score, remarks) VALUES (?, ?, ?, ?, ?, ?)";
+    $sql = "INSERT INTO subject_assignments (student_id, subject_id) VALUES (?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('iiddss', $student_id, $subject_id, $exam_score, $class_score, $total_score, $remarks);
+    $stmt->bind_param('si', $student_id, $subject_id);
 
     if ($stmt->execute()) {
-        header('Location: view_reports.php');
+        header('Location: view_assignments.php');
     } else {
         $error = "Error: " . $stmt->error;
     }
 }
+
+$sql_students = "SELECT student_id, name FROM users WHERE role = 'student'";
+$result_students = $conn->query($sql_students);
+
+$sql_subjects = "SELECT id, name FROM subjects";
+$result_subjects = $conn->query($sql_subjects);
 ?>
 
 <!DOCTYPE html>
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Report - StuDesk</title>
+    <title>Assign Subject - StuDesk</title>
     <link rel="stylesheet" href="../../../assets/css/styles.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -45,32 +47,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php include '../../../templates/sidebar.php'; ?>
             </div>
             <div class="col-md-9">
-                <h2>Add Report</h2>
+                <h2>Assign Subject</h2>
                 <?php if (isset($error)): ?>
                     <div class="alert alert-danger"><?php echo $error; ?></div>
                 <?php endif; ?>
                 <form method="POST" action="">
                     <div class="form-group">
-                        <label for="student_id">Student ID</label>
-                        <input type="text" class="form-control" id="student_id" name="student_id" required>
+                        <label for="student_id">Student</label>
+                        <select class="form-control" id="student_id" name="student_id" required>
+                            <?php while ($student = $result_students->fetch_assoc()): ?>
+                                <option value="<?php echo $student['student_id']; ?>"><?php echo $student['name']; ?></option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label for="subject_id">Subject ID</label>
-                        <input type="text" class="form-control" id="subject_id" name="subject_id" required>
+                        <label for="subject_id">Subject</label>
+                        <select class="form-control" id="subject_id" name="subject_id" required>
+                            <?php while ($subject = $result_subjects->fetch_assoc()): ?>
+                                <option value="<?php echo $subject['id']; ?>"><?php echo $subject['name']; ?></option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="exam_score">Exam Score (70%)</label>
-                        <input type="number" step="0.01" class="form-control" id="exam_score" name="exam_score" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="class_score">Class Score (30%)</label>
-                        <input type="number" step="0.01" class="form-control" id="class_score" name="class_score" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="remarks">Remarks</label>
-                        <textarea class="form-control" id="remarks" name="remarks" rows="4"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Add Report</button>
+                    <button type="submit" class="btn btn-primary">Assign Subject</button>
                 </form>
             </div>
         </div>

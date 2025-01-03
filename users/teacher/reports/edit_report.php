@@ -3,7 +3,7 @@
 session_start();
 require_once '../../../config/database.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: ../../auth/login.php');
     exit();
 }
@@ -12,12 +12,14 @@ if (isset($_GET['id'])) {
     $id = $_GET['id'];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $title = $_POST['title'];
-        $description = $_POST['description'];
+        $exam_score = $_POST['exam_score'];
+        $class_score = $_POST['class_score'];
+        $total_score = $exam_score * 0.7 + $class_score * 0.3;
+        $remarks = $_POST['remarks'];
 
-        $sql = "UPDATE reports SET title = ?, description = ? WHERE id = ?";
+        $sql = "UPDATE reports SET exam_score = ?, class_score = ?, total_score = ?, remarks = ? WHERE id = ?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('ssi', $title, $description, $id);
+        $stmt->bind_param('dddsi', $exam_score, $class_score, $total_score, $remarks, $id);
 
         if ($stmt->execute()) {
             header('Location: view_reports.php');
@@ -61,12 +63,16 @@ if (isset($_GET['id'])) {
                 <?php endif; ?>
                 <form method="POST" action="">
                     <div class="form-group">
-                        <label for="title">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($report['title']); ?>" required>
+                        <label for="exam_score">Exam Score (70%)</label>
+                        <input type="number" step="0.01" class="form-control" id="exam_score" name="exam_score" value="<?php echo htmlspecialchars($report['exam_score']); ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="4" required><?php echo htmlspecialchars($report['description']); ?></textarea>
+                        <label for="class_score">Class Score (30%)</label>
+                        <input type="number" step="0.01" class="form-control" id="class_score" name="class_score" value="<?php echo htmlspecialchars($report['class_score']); ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="remarks">Remarks</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="4"><?php echo htmlspecialchars($report['remarks']); ?></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Update Report</button>
                 </form>

@@ -3,7 +3,7 @@
 session_start();
 require_once '../../config/database.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'student') {
     header('Location: ../auth/login.php');
     exit();
 }

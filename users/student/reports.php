@@ -1,17 +1,24 @@
-<!-- users/student/reports.php -->
+<!-- users/student/view_reports.php -->
 <?php
 session_start();
 require_once '../../config/database.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'student') {
     header('Location: ../auth/login.php');
     exit();
 }
 
-// Fetch reports from the database
-$sql = "SELECT * FROM reports WHERE student_username = ?";
+$student_id = $_SESSION['student_id'];
+
+// Fetch reports for the logged-in student
+$sql = "
+    SELECT r.id, s.name as subject_name, r.exam_score, r.class_score, r.total_score, r.remarks
+    FROM reports r
+    JOIN subjects s ON r.subject_id = s.id
+    WHERE r.student_id = ?
+";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('s', $_SESSION['username']);
+$stmt->bind_param('s', $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -21,7 +28,7 @@ $result = $stmt->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports - StuDesk</title>
+    <title>View Reports - StuDesk</title>
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
@@ -33,21 +40,25 @@ $result = $stmt->get_result();
                 <?php include '../../templates/sidebar.php'; ?>
             </div>
             <div class="col-md-9">
-                <h2>Reports</h2>
+                <h2>View Reports</h2>
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Title</th>
-                            <th>Description</th>
+                            <th>Subject</th>
+                            <th>Exam Score (70%)</th>
+                            <th>Class Score (30%)</th>
+                            <th>Total Score (100%)</th>
+                            <th>Remarks</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php while ($row = $result->fetch_assoc()): ?>
                             <tr>
-                                <td><?php echo $row['id']; ?></td>
-                                <td><?php echo $row['title']; ?></td>
-                                <td><?php echo $row['description']; ?></td>
+                                <td><?php echo $row['subject_name']; ?></td>
+                                <td><?php echo $row['exam_score']; ?></td>
+                                <td><?php echo $row['class_score']; ?></td>
+                                <td><?php echo $row['total_score']; ?></td>
+                                <td><?php echo $row['remarks']; ?></td>
                             </tr>
                         <?php endwhile; ?>
                     </tbody>

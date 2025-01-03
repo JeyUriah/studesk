@@ -3,17 +3,18 @@
 session_start();
 require_once '../../../config/database.php';
 
-if (!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'teacher') {
     header('Location: ../../auth/login.php');
     exit();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
+    $teacher_id = $_SESSION['teacher_id'];
 
-    $sql = "INSERT INTO subjects (name) VALUES (?)";
+    $sql = "INSERT INTO subjects (name, teacher_id) VALUES (?, ?)";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $name);
+    $stmt->bind_param('ss', $name, $teacher_id);
 
     if ($stmt->execute()) {
         header('Location: view_subjects.php');

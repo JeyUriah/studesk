@@ -14,8 +14,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $_SESSION['username'] = $username;
-        header('Location: ../teacher/index.php');
+        $user = $result->fetch_assoc();
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['role'] = $user['role'];
+
+        if ($user['role'] === 'teacher') {
+            header('Location: ../teacher/index.php');
+        } else {
+            header('Location: ../student/index.php');
+        }
+        exit();
     } else {
         $error = "Invalid username or password";
     }
