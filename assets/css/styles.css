@@ -1,0 +1,18 @@
+/* assets/css/styles.css */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+}
+
+header,
+footer {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+main {
+  padding: 2rem;
+  text-align: center;
+}
